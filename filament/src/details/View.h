@@ -5,8 +5,8 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
  *
+ *      http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -148,6 +148,9 @@ public:
         return &mDirectionalShadowMap.getDebugCamera();
     }
 
+    void setRenderTarget(FEngine& engine, FTexture* color, FTexture* depth, uint8_t miplevel,
+            Texture::CubemapFace cubeface, TargetBufferFlags discard) noexcept;
+
     void setRenderTarget(TargetBufferFlags discard) noexcept {
         mDiscardedTargetBuffers = discard;
     }
@@ -266,6 +269,10 @@ public:
     FCamera& getCameraUser() noexcept { return *mCullingCamera; }
     void setCameraUser(FCamera* camera) noexcept { setCullingCamera(camera); }
 
+    backend::Handle<backend::HwRenderTarget> getRenderTarget() const noexcept {
+        return mRenderTarget;
+    }
+
 private:
     static constexpr size_t MAX_FRAMETIME_HISTORY = 32u;
 
@@ -324,7 +331,10 @@ private:
     bool mClearTargetColor = true;
     bool mClearTargetDepth = true;
     bool mClearTargetStencil = false;
+
     TargetBufferFlags mDiscardedTargetBuffers = TargetBufferFlags::ALL;
+    backend::Handle<backend::HwRenderTarget> mRenderTarget;
+
     uint8_t mVisibleLayers = 0x1;
     uint8_t mSampleCount = 1;
     AntiAliasing mAntiAliasing = AntiAliasing::FXAA;

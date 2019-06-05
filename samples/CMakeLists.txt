@@ -149,13 +149,18 @@ endif()
 add_library(suzanne-resources ${DUMMY_SRC} ${RESGEN_SOURCE})
 
 # ==================================================================================================
-# Resources for gltf_viewer
+# Resources for the gltf_viewer and lucy demos
 # ==================================================================================================
 
 get_resgen_vars(${RESOURCE_DIR} gltf)
 
 set(GLTF_RESOURCE_FILES
     ${ROOT_DIR}/third_party/models/DamagedHelmet/DamagedHelmet.glb
+    ${ROOT_DIR}/third_party/models/lucy/lucy.glb
+    ${ROOT_DIR}/third_party/textures/Blue_tiles_01/Blue_tiles_01_AO.png
+    ${ROOT_DIR}/third_party/textures/Blue_tiles_01/Blue_tiles_01_Color.png
+    ${ROOT_DIR}/third_party/textures/Blue_tiles_01/Blue_tiles_01_Normal.png
+    ${ROOT_DIR}/third_party/textures/Blue_tiles_01/Blue_tiles_01_Roughness.png
 )
 
 add_custom_command(
@@ -229,19 +234,14 @@ endif()
 
 function(add_assimp_demo NAME)
     include_directories(${GENERATION_ROOT})
-    add_executable(
-            ${NAME}
-            ${NAME}.cpp
-            app/MeshAssimp.cpp)
+    add_executable(${NAME} ${NAME}.cpp app/MeshAssimp.cpp)
     target_link_libraries(${NAME} PRIVATE ${APP_LIBS} assimp)
     target_compile_options(${NAME} PRIVATE ${COMPILER_FLAGS})
 endfunction()
 
 function(add_filamesh_demo NAME)
     include_directories(${GENERATION_ROOT})
-    add_executable(
-            ${NAME}
-            ${NAME}.cpp)
+    add_executable(${NAME} ${NAME}.cpp)
     target_link_libraries(${NAME} PRIVATE ${APP_LIBS} filameshio)
     target_compile_options(${NAME} PRIVATE ${COMPILER_FLAGS})
 endfunction()
@@ -263,6 +263,10 @@ if (NOT ANDROID)
     target_link_libraries(suzanne PRIVATE suzanne-resources)
     target_link_libraries(gltf_viewer PRIVATE gltf-resources gltfio)
     target_link_libraries(gltf_baker PRIVATE gltf-resources gltfio imageio)
+
+    add_executable(lucy lucy.cpp LucyUtils.h LucyUtils.cpp)
+    target_compile_options(lucy PRIVATE ${COMPILER_FLAGS})
+    target_link_libraries(lucy PRIVATE ${APP_LIBS} gltf-resources gltfio)
 endif()
 
 # ==================================================================================================

@@ -34,8 +34,10 @@
 namespace filament {
 
 class Camera;
+class Engine;
 class MaterialInstance;
 class Scene;
+class Texture;
 
 /**
  * A View encompasses all the state needed for rendering a Scene.
@@ -390,6 +392,14 @@ public:
     void setShadowsEnabled(bool enabled) noexcept;
 
     /**
+     * TODO: write documentation, but maybe we should create a RenderTarget and Builder.
+     */
+    void setRenderTarget(Engine& engine, Texture* color, Texture* depth, uint8_t miplevel,
+            backend::TextureCubemapFace cubeface = backend::TextureCubemapFace::POSITIVE_X,
+            TargetBufferFlags discard = TargetBufferFlags::ALL) noexcept;
+
+
+    /**
      * Specifies which buffers can be discarded before rendering.
      *
      * For performance reasons, the default is to discard all buffers, which is generally
@@ -399,9 +409,6 @@ public:
      * it is necessary to indicate that the color buffer cannot be discarded.
      *
      * @param discard Buffers that need to be discarded before rendering.
-     *
-     * @note
-     * In the future this API will also allow to set the render target.
      */
     void setRenderTarget(TargetBufferFlags discard = TargetBufferFlags::ALL) noexcept;
 

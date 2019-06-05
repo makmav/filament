@@ -30,7 +30,7 @@ namespace GLUtils {
 void checkGLError(utils::io::ostream& out, const char* function, size_t line) noexcept;
 void checkFramebufferStatus(utils::io::ostream& out, const char* function, size_t line) noexcept;
 
-#ifdef NDEBUG
+#ifdef NDEBUGFOO
 #define CHECK_GL_ERROR(out)
 #define CHECK_GL_FRAMEBUFFER_STATUS(out)
 #else

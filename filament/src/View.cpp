@@ -32,9 +32,10 @@
 #include <private/filament/UibGenerator.h>
 
 #include <utils/Allocator.h>
-#include <utils/Systrace.h>
+#include <utils/Panic.h>
 #include <utils/Profiler.h>
 #include <utils/Slice.h>
+#include <utils/Systrace.h>
 
 #include <math/scalar.h>
 #include <math/fast.h>
@@ -91,6 +92,7 @@ FView::~FView() noexcept = default;
 void FView::terminate(FEngine& engine) {
     // Here we would cleanly free resources we've allocated or we own (currently none).
     DriverApi& driver = engine.getDriverApi();
+    driver.destroyRenderTarget(mRenderTarget);
     driver.destroyUniformBuffer(mPerViewUbh);
     driver.destroyUniformBuffer(mLightUbh);
     driver.destroySamplerGroup(mPerViewSbh);
@@ -771,6 +773,38 @@ void FView::updatePrimitivesLod(FEngine& engine, const CameraInfo&,
     }
 }
 
+void FView::setRenderTarget(FEngine& engine, FTexture* color, FTexture* depth, uint8_t miplevel,
+        Texture::CubemapFace cubeface, TargetBufferFlags discard) noexcept {
+    // It's easy to forget the right usage flags, so check them right away.
+    using backend::TextureUsage;
+    if (!ASSERT_PRECONDITION_NON_FATAL(color->getUsage() & TextureUsage::COLOR_ATTACHMENT,
+            "Texture usage must contain COLOR_ATTACHMENT")) {
+        return;
+    }
+    if (depth && !ASSERT_PRECONDITION_NON_FATAL(depth->getUsage() & TextureUsage::DEPTH_ATTACHMENT,
+            "Texture usage must contain DEPTH_ATTACHMENT")) {
+        return;
+    }
+
+    mDiscardedTargetBuffers = discard;
+
+    // Clients might request depth when post-processing is disabled in the View.
+    const backend::TargetBufferFlags flags = depth ? backend::COLOR_AND_DEPTH : backend::COLOR;
+
+    const uint32_t width = FTexture::valueForLevel(miplevel, color->getWidth());
+    const uint32_t height = FTexture::valueForLevel(miplevel, color->getHeight());
+    const uint8_t samples = color->getSampleCount();
+    const backend::TargetBufferInfo cinfo(color->getHwHandle(), miplevel, cubeface);
+    const backend::TargetBufferInfo dinfo(depth ? depth->getHwHandle() : backend::TextureHandle(),
+            miplevel, cubeface);
+
+    DriverApi& driver = engine.getDriverApi();
+    if (mRenderTarget) {
+        driver.destroyRenderTarget(mRenderTarget);
+    }
+    mRenderTarget = driver.createRenderTarget(flags, width, height, samples, cinfo, dinfo, {});
+}
+
 } // namespace details
 
 // ------------------------------------------------------------------------------------------------
@@ -848,6 +882,14 @@ Camera const* View::getDirectionalLightCamera() const noexcept {
 
 void View::setShadowsEnabled(bool enabled) noexcept {
     upcast(this)->setShadowsEnabled(enabled);
+}
+
+void View::setRenderTarget(Engine& engine, Texture* color, Texture* depth, uint8_t miplevel,
+        backend::TextureCubemapFace cubeface, TargetBufferFlags discard) noexcept {
+    FEngine& fengine = upcast(engine);
+    FTexture* fcolor = upcast(color);
+    FTexture* fdepth = upcast(depth);
+    upcast(this)->setRenderTarget(fengine, fcolor, fdepth, miplevel, cubeface, discard);
 }
 
 void View::setRenderTarget(TargetBufferFlags discard) noexcept {
