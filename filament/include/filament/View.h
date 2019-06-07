@@ -364,7 +364,7 @@ public:
      *
      * Renderable objects can have one or several layers associated to them. Layers are
      * represented with an 8-bits bitmask, where each bit corresponds to a layer.
-     * @see Renderable::setLayer().
+     * @see RenderableManager::setLayerMask().
      *
      * This call sets which of those layers are visible, Renderable in invisible layers won't be
      * rendered.
