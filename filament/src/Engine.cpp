@@ -284,6 +284,7 @@ void FEngine::shutdown() {
     cleanupResourceList(mIndexBuffers);
     cleanupResourceList(mVertexBuffers);
     cleanupResourceList(mTextures);
+    cleanupResourceList(mRenderTargets);
     cleanupResourceList(mMaterials);
     for (auto& item : mMaterialInstances) {
         cleanupResourceList(item.second);
@@ -540,6 +541,10 @@ FStream* FEngine::createStream(const Stream::Builder& builder) noexcept {
     return create(mStreams, builder);
 }
 
+FRenderTarget* FEngine::createRenderTarget(const RenderTarget::Builder& builder) noexcept {
+    return create(mRenderTargets, builder);
+}
+
 /*
  * Special cases
  */
@@ -694,6 +699,10 @@ inline void FEngine::destroy(const FSkybox* p) {
 UTILS_NOINLINE
 void FEngine::destroy(const FTexture* p) {
     terminateAndDestroy(p, mTextures);
+}
+
+void FEngine::destroy(const FRenderTarget* p) {
+    terminateAndDestroy(p, mRenderTargets);
 }
 
 inline void FEngine::destroy(const FView* p) {
